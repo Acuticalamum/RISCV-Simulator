@@ -19,6 +19,12 @@ class ALU {
       public:
         Input input;
         bool wired = false;
+        void wire(Input& input_) {
+          if(!wired) {
+            input = input_;
+            wired = true;
+          }
+        }
     } wire_in;
 
     class Output {
@@ -38,16 +44,25 @@ class ALU {
     Output calculate(Input &in) {
       uint32_t val;
       switch(in.type) {
-        case ADD:  val = in.val1 + in.val2; break;
+        case ADD:  case ADDI:
+                   val = in.val1 + in.val2; break;
         case SUB:  val = in.val1 - in.val2; break;
-        case AND:  val = in.val1 & in.val2; break;
-        case OR:   val = in.val1 | in.val2; break;
-        case XOR:  val = in.val1 ^ in.val2; break;
-        case SLL:  val = ((uint32_t)in.val1) << in.val2; break;
-        case SRL:  val = ((uint32_t)in.val1) >> in.val2; break;
-        case SLT:  val = in.val1 < in.val2; break;
-        case SLTU: val = ((uint32_t)in.val1) < ((uint32_t)in.val2); break;
-        case SRA:  val = in.val1 >> in.val2; break;
+        case AND:  case ANDI:
+                   val = in.val1 & in.val2; break;
+        case OR:   case ORI:
+                   val = in.val1 | in.val2; break;
+        case XOR:  case XORI:
+                   val = in.val1 ^ in.val2; break;
+        case SLL:  case SLLI:
+                   val = ((uint32_t)in.val1) << in.val2; break;
+        case SRL:  case SRLI:
+                   val = ((uint32_t)in.val1) >> in.val2; break;
+        case SLT:  case SLTI:
+                   val = in.val1 < in.val2; break;
+        case SLTU: case SLTIU:
+                   val = ((uint32_t)in.val1) < ((uint32_t)in.val2); break;
+        case SRA:  case SRAI:
+                   val = in.val1 >> in.val2; break;
         case BEQ:  val = in.val1 == in.val2; break;
         case BGE:  val = in.val1 >= in.val2; break;
         case BGEU: val = ((uint32_t)in.val1) >= ((uint32_t)in.val2); break;
@@ -56,7 +71,16 @@ class ALU {
         case BNE:  val = in.val1 != in.val2; break;
         case JALR: val = in.val1 + in.val2; break;
       }
+      //std::cout << "Calc" << val << std::endl;
       return Output(val, in.dest);
+    }
+
+    void wire(Input& input_) {
+      wire_in.wire(input_);
+    }
+
+    void clear() {
+      wire_in.wired = wire_out.wired = false;
     }
 
     void run() {
@@ -64,12 +88,17 @@ class ALU {
       if(wire_in.wired == false) return;
       wire_in.wired = false;
       wire_out.output = calculate(wire_in.input);
+      if(wire_in.input.type == JALR) {
+        //puts("jalr calculated");
+        //std::cout << wire_in.input.val1 << ' ' << wire_in.input.val2 << std::endl;
+      }
       wire_out.wired = true;
     }
 
     void flush(ROB* rob) {
       if(wire_out.wired) {
         rob -> buffer[wire_out.output.dest].value = wire_out.output.val;
+        //std::cout << "wireout" << wire_out.output.val << std::endl;
         rob -> buffer[wire_out.output.dest].state = kCommit;
         wire_out.wired = false;
       }

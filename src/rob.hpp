@@ -13,7 +13,10 @@ class ROBItem {
     Instruction instruction;
     State state = kIssued;
     uint32_t dest;
-    uint32_t value;
+    int32_t value;
+    uint32_t pc;
+    ROBItem() = default;
+    ROBItem(Instruction& instruction_, uint32_t pc_) : instruction(instruction_), pc(pc_) {}
 };
 class ROB {
   public:
@@ -21,6 +24,12 @@ class ROB {
       public:
         ROBItem input;
         bool wired = false;
+        void wire(ROBItem& input_) {
+          if(!wired) {
+            wired = true;
+            input = input_;
+          }
+        }
     } wire_in;
 
     class Output {
@@ -36,7 +45,7 @@ class ROB {
         bool wired = false;
     } wire_out;
 
-    const static uint8_t ROB_SIZE = 8;
+    const static uint8_t ROB_SIZE = 255;
     CircularQueue<ROBItem, ROB_SIZE> buffer;
     
     bool full() {
@@ -47,6 +56,18 @@ class ROB {
       return buffer.empty();
     }
 
+    uint8_t head() {
+      return buffer.head;
+    }
+
+    uint8_t tail() {
+      return buffer.tail;
+    }
+
+    void wire(ROBItem& input_) {
+      wire_in.wire(input_);
+    }
+
     void run() {
       if(wire_in.wired) {
         if(!full()) {
@@ -55,7 +76,7 @@ class ROB {
         }
       }
       if(!wire_out.wired) {
-        if(!empty()) {
+        if(!empty() && buffer.front().state == kCommit) {
           wire_out.wired = true;
           wire_out.output.info = buffer.front();
           wire_out.output.num = buffer.head;

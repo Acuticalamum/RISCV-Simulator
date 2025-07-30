@@ -6,6 +6,11 @@ class Decoder {
   Instruction decode(uint32_t raw_code) {
     Instruction ret;
 
+    if(raw_code == 0x0ff00513) {
+      ret.type = HALT;
+      return ret;
+    }
+
     uint8_t opcode = raw_code & 0x7f;
     if(opcode == 0x33) { // R type
       uint8_t rd = (raw_code >> 7)  & 0x1f;
@@ -152,7 +157,7 @@ class Decoder {
     }
 
     else if(opcode == 0x17) {//AUIPC
-      uint8_t rd = (raw_code >> 7) & 0x1F;
+      uint8_t rd = (raw_code >> 7) & 0x1f;
       int32_t imm = raw_code & 0xfffff000;
 
       ret.rd = rd;
@@ -161,12 +166,12 @@ class Decoder {
     }
 
     else if(opcode == 0x37) {//LUI
-      uint8_t rd = (raw_code >> 7) & 0x1F;
+      uint8_t rd = (raw_code >> 7) & 0x1f;
       int32_t imm = raw_code & 0xfffff000;
       
       ret.rd = rd;
       ret.imm = imm;
-      ret.type = AUIPC;
+      ret.type = LUI;
     }
 
     else if(opcode == 0x73) {//EBREAK & ECALL
