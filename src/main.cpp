@@ -3,7 +3,6 @@
 #include<chrono>
 #include"cpu.hpp"
 int main() {
-  freopen("../data/test1.data", "r", stdin);
   CPU cpu;
   uint8_t output;
   while(cpu.run(output));
