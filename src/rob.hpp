@@ -45,7 +45,7 @@ class ROB {
         bool wired = false;
     } wire_out;
 
-    const static uint8_t ROB_SIZE = 255;
+    const static uint8_t ROB_SIZE = 32;
     CircularQueue<ROBItem, ROB_SIZE> buffer;
     
     bool full() {

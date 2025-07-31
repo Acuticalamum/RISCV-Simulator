@@ -139,7 +139,7 @@ class CPU {
             rob_input.dest = imm;
             rs_input.imm = imm;
             rs_input.fill(rf, rs1, rs2);
-            if(predictor.jump()) {
+            if(predictor.jump(tem_pc)) {
               pre[pres++] = true;
               tem_pc += imm;
             }
@@ -259,7 +259,9 @@ class CPU {
       else if(output.info.instruction.isB()) {
         if(output.info.value) {
           real_pc += output.info.dest;
+          predictor.add(output.info.pc);
           if(pre[0]) {
+            predictor.suc(output.info.pc);
             for(int i = 0; i < pres - 1; i++) pre[i] = pre[i + 1];
             --pres;
           } else {
@@ -268,7 +270,9 @@ class CPU {
         }
         if(!output.info.value) {
           real_pc += 4;
+          predictor.add(output.info.pc);
           if(!pre[0]) {
+            predictor.suc(output.info.pc);
             for(int i = 0; i < pres - 1; i++) pre[i] = pre[i + 1];
             --pres;
           } else {
